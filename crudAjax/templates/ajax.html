@@ -1,0 +1,136 @@
+<script>
+    //Inserto de datos
+    $("#btnsave").click(function (){
+        //console.log("Save Button clicked")
+        output = "";
+        let sid = $("#stuid").val();
+        let nm = $("#nombreid").val();
+        let em = $("#emailid").val();
+        let pw = $("#passwordid").val();
+        let te = $("#telefonoid").val();
+        let fe = $("#fechaid").val();
+        let csr = $("input[name=csrfmiddlewaretoken]").val();
+        if(nm ==""){
+            console.log("Please Enter Nombre")
+            $("#msga").text("Por favor ingrese un nombre");
+            $("#msga").show();
+        }else if(em == ""){
+            console.log("Please Enter Email")
+            $("#msga").text("Por favor ingrese un Email");
+            $("#msga").show();
+        }else if(pw == ""){
+            console.log("Please Enter Password")
+            $("#msga").text("Por favor ingrese un Password");
+            $("#msga").show();
+        }else{
+            //console.log(nm);
+            //console.log(em);
+            //console.log(pw);
+            mydata = {
+                stuid: sid ,
+                nombre: nm,
+                email:em,
+                password: pw,
+                telefono: te,
+                fecha_nacimiento: fe,
+                csrfmiddlewaretoken: csr
+            };
+            $.ajax({
+                url: "{% url 'save' %}",
+                method: "POST",
+                data: mydata,
+                success:function (data){
+                    //console.log(data);
+                    x = data.student_data;
+                    if(data.status == "Save"){
+                        $("#msg").text("Formulario enviado con éxito");
+                        $("#msg").show();
+                        //console.log(x);
+                        for(i=0; i < x.length; i++){
+                            output +=
+                                "<tr><td>" +
+                                x[i].id +
+                                "</td><td>" +
+                                x[i].nombre +
+                                "</td><td>" +
+                                x[i].email +
+                                "</td><td>" +
+                                x[i].password +
+                                "</td><td>" +
+                                x[i].telefono +
+                                "</td><td>" +
+                                x[i].fecha_nacimiento +
+                                "</td><td> <input type='button' class='btn btn-warning btn-sm btn-edit' value='Edit' data-sid=" +
+                                x[i].id +
+                                "> <input type='button' class='btn btn-danger btn-sm btn-del' value='Delete' data-sid=" +
+                                x[i].id +
+                                ">";
+                        }
+                        $("#tbody").html(output);
+                        $("#stuid").val('');
+                        $("form")[0].reset();
+                    }
+                    if(data.status == 0){
+                        $("#msg").text("No se pueden guardar los datos");
+                        $("#msg").show();
+                        $("#stuid").val('');
+                        $("form")[0].reset();
+                    }
+                },
+            });
+        }
+    });
+
+    //Borrado de datos
+    $("tbody").on("click", ".btn-del", function(){
+        //console.log("Delete Button Clicked")
+        let id = $(this).attr("data-sid");
+        let csr = $("input[name=csrfmiddlewaretoken]").val();
+        //console.log(id);
+        mydata = {sid:id, csrfmiddlewaretoken: csr};
+        mythis = this;
+        $.ajax({
+            url:"{% url 'delete' %}",
+            method: "POST",
+            data: mydata,
+            success:function (data){
+                //console.log(data);
+                if(data.status == 1){
+                    $("#msg").text("Datos borrados con éxito");
+                    $("#msg").show();
+                    $(mythis).closest("tr").fadeOut();
+                }
+                 if(data.status == 0){
+                    $("#msg").text("No se pueden borrar los datos");
+                    $("#msg").show();
+                }
+            },
+        });
+    });
+
+    //Editar Datos
+     $("tbody").on("click", ".btn-edit", function(){
+        let id = $(this).attr("data-sid");
+        let csr = $("input[name=csrfmiddlewaretoken").val();
+        //console.log(id);
+        mydata = {sid:id, csrfmiddlewaretoken: csr};
+        $.ajax({
+            url:"{% url 'edit' %}",
+            method: "POST",
+            data: mydata,
+            dataType: "json",
+            success:function (data){
+                //console.log(data);
+                $("#stuid").val(data.id);
+                $("#nombreid").val(data.nombre);
+                $("#emailid").val(data.email);
+                $("#passwordid").val(data.password);
+                $("#telefonoid").val(data.telefono);
+                $("#fechaid").val(data.fecha_nacimiento);
+            },
+        });
+    });
+</script>
+
+
+
